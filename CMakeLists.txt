@@ -80,6 +80,13 @@ add_custom_command(
 	        $<TARGET_FILE_DIR:BearEmuChip8>
 	)
 
+add_custom_command(
+	TARGET BearEmuChip8 POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+	        ${CMAKE_SOURCE_DIR}/roms
+	        $<TARGET_FILE_DIR:BearEmuChip8>/roms
+	)
+
 # DOCUMENTATION ######################################################
 
 find_package(Doxygen 
