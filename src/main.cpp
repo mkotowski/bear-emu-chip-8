@@ -32,7 +32,6 @@ public:
 		
 		terminal_printf(67, 18, "[color=orange]%s:[/color] 0x%04X%s", "PC", pc, " [color=gray]" "(program counter)");
 		terminal_printf(67, 19, "[color=orange]%s:[/color] 0x%04X%s", " I",  I, " [color=gray]" "nop");
-		terminal_printf(67, 20, "%04x", memory[0]);
 	}
 
 	void GameScreenFrame() {
@@ -258,7 +257,7 @@ public:
 					break;
 					case 0x0005: // 0x8XY5: VY is subtracted from VX. 
 						// VF is set to 0 when there's a borrow, and 1 when there isn't.
-						if (V[(opcode & 0x00F0) >> 4] > (V[(opcode & 0x0F00) >> 8]))
+						if (V[(opcode & 0x00F0) >> 4] > V[(opcode & 0x0F00) >> 8])
 						{
 							V[0xF] = 0; // Borrow
 						}
@@ -268,6 +267,7 @@ public:
 						}
 						V[(opcode & 0x0F00) >> 8] -= V[(opcode & 0x00F0) >> 4];
 						pc += 2;
+						break;
 					default:
 						terminal_printf(67, 26, "[color=red]ERR Unknown opcode: 0x%04X\n", opcode);
 					break;
@@ -353,6 +353,11 @@ public:
 						delay_timer = V[(opcode & 0x0F00) >> 8];
 						pc += 2;
 					break;
+					case 0x0018: // 0xFX18: Sets the sound timer to VX.
+						// delay_timer(Vx)
+						sound_timer = V[(opcode & 0x0F00) >> 8];
+						pc += 2;
+					break;
 					case 0x0033:
 						// 0xFX33: Stores the binary-coded decimal representation of VX
 						//         at the addresses I, I plus 1, and I plus 2
@@ -391,16 +396,16 @@ public:
 		{
 			--delay_timer;
 
-			// if(delay_timer == 0) {
-			// 	terminal_print(70,21,"delay fired!");
-			// }
+			if(delay_timer == 0) {
+				terminal_print(67,21,"↕ delay fired!");
+			}
 		}
 
 		if(sound_timer > 0)
 		{
 			if(sound_timer == 1)
 			{
-				terminal_print(70,20,"sound fired!");
+				terminal_print(67,22,"♪ sound fired!");
 			}
 
 			--sound_timer;
@@ -535,7 +540,7 @@ int main(int argc, char const *argv[])
 
 		// emulate one cycle of the system
 		chip8.EmulateCycle();
-		// terminal_delay(1000);
+		// terminal_delay(50);
 		if (chip8.drawFlag)
 		{
 			// drawGraphics();
