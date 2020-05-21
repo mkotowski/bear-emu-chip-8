@@ -19,24 +19,30 @@ public:
 		terminal_set("window: title='CHIP-8 Emulator', resizeable=true, minimum-size=66x34, size=100x34");
 	}
 	void PrintDebugInfo(unsigned char * V, unsigned short pc, unsigned short I) {
-		terminal_printf(67, 1,  "[color=orange]%s:[/color] 0x%04X%s", "V0", V[0], " [color=gray]" "nop");
-		terminal_printf(67, 2,  "[color=orange]%s:[/color] 0x%04X%s", "V1", V[1], " [color=gray]" "nop");
-		terminal_printf(67, 3,  "[color=orange]%s:[/color] 0x%04X%s", "V2", V[2], " [color=gray]" "nop");
-		terminal_printf(67, 4,  "[color=orange]%s:[/color] 0x%04X%s", "V3", V[3], " [color=gray]" "nop");
-		terminal_printf(67, 5,  "[color=orange]%s:[/color] 0x%04X%s", "V4", V[4], " [color=gray]" "nop");
-		terminal_printf(67, 6,  "[color=orange]%s:[/color] 0x%04X%s", "V5", V[5], " [color=gray]" "nop");
-		terminal_printf(67, 7,  "[color=orange]%s:[/color] 0x%04X%s", "V6", V[6], " [color=gray]" "nop");
-		terminal_printf(67, 8,  "[color=orange]%s:[/color] 0x%04X%s", "V7", V[7], " [color=gray]" "nop");
-		terminal_printf(67, 9,  "[color=orange]%s:[/color] 0x%04X%s", "V8", V[8], " [color=gray]" "nop");
-		terminal_printf(67, 10, "[color=orange]%s:[/color] 0x%04X%s", "V9", V[9], " [color=gray]" "nop");
-		terminal_printf(67, 11, "[color=orange]%s:[/color] 0x%04X%s", "VA", V[10], " [color=gray]" "nop");
-		terminal_printf(67, 12, "[color=orange]%s:[/color] 0x%04X%s", "VB", V[11], " [color=gray]" "nop");
-		terminal_printf(67, 13, "[color=orange]%s:[/color] 0x%04X%s", "VC", V[12], " [color=gray]" "nop");
-		terminal_printf(67, 14, "[color=orange]%s:[/color] 0x%04X%s", "VD", V[13], " [color=gray]" "nop");
-		terminal_printf(67, 15, "[color=orange]%s:[/color] 0x%04X%s", "VE", V[14], " [color=gray]" "nop");
-		terminal_printf(67, 16, "[color=orange]%s:[/color] 0x%04X%s", "VF", V[15], " [color=gray]" "carry");
+		// terminal_printf(67, 1,  "[color=orange]%s:[/color] 0x%04X%s", "V0", V[0], " [color=gray]%d", V[0]);
+		// terminal_printf(67, 2,  "[color=orange]%s:[/color] 0x%04X%s", "V1", V[1], " [color=gray]%d");
+		// terminal_printf(67, 3,  "[color=orange]%s:[/color] 0x%04X%s", "V2", V[2], " [color=gray]%d");
+		// terminal_printf(67, 4,  "[color=orange]%s:[/color] 0x%04X%s", "V3", V[3], " [color=gray]%d");
+		// terminal_printf(67, 5,  "[color=orange]%s:[/color] 0x%04X%s", "V4", V[4], " [color=gray]%d");
+		// terminal_printf(67, 6,  "[color=orange]%s:[/color] 0x%04X%s", "V5", V[5], " [color=gray]%d");
+		// terminal_printf(67, 7,  "[color=orange]%s:[/color] 0x%04X%s", "V6", V[6], " [color=gray]%d");
+		// terminal_printf(67, 8,  "[color=orange]%s:[/color] 0x%04X%s", "V7", V[7], " [color=gray]%d");
+		// terminal_printf(67, 9,  "[color=orange]%s:[/color] 0x%04X%s", "V8", V[8], " [color=gray]%d");
+		// terminal_printf(67, 10, "[color=orange]%s:[/color] 0x%04X%s", "V9", V[9], " [color=gray]%d");
+		// terminal_printf(67, 11, "[color=orange]%s:[/color] 0x%04X%s", "VA", V[10], " [color=gray]%d");
+		// terminal_printf(67, 12, "[color=orange]%s:[/color] 0x%04X%s", "VB", V[11], " [color=gray]%d");
+		// terminal_printf(67, 13, "[color=orange]%s:[/color] 0x%04X%s", "VC", V[12], " [color=gray]%d");
+		// terminal_printf(67, 14, "[color=orange]%s:[/color] 0x%04X%s", "VD", V[13], " [color=gray]%d");
+		// terminal_printf(67, 15, "[color=orange]%s:[/color] 0x%04X%s", "VE", V[14], " [color=gray]%d");
+
+		for (int i = 0; i < 0x10; ++i)
+		{
+			terminal_printf(67, 1 + i, "[color=orange]V%01X:[/color] 0x%04X [color=gray]%3d", i, V[i], V[i]);
+		}
+
+		terminal_printf(67, 16, "[color=orange]%s:[/color] 0x%04X%s", "VF", V[15], " [color=gray]" "(carry flag)");
 		
-		terminal_printf(67, 18, "[color=orange]%s:[/color] 0x%04X%s", "PC", pc, " [color=gray]" "nop");
+		terminal_printf(67, 18, "[color=orange]%s:[/color] 0x%04X%s", "PC", pc, " [color=gray]" "(program counter)");
 		terminal_printf(67, 19, "[color=orange]%s:[/color] 0x%04X%s", " I",  I, " [color=gray]" "nop");
 	}
 
@@ -196,7 +202,7 @@ public:
 			case 0xD000:
 				// 0xDXYN: Draws a sprite at coordinate (VX, VY) that has 
 				//         a width of 8 pixels and a height of N pixels.
-
+				pc += 2;
 			break;
 			case 0xF000:
 				switch(opcode & 0x00FF)
@@ -218,6 +224,9 @@ public:
 						memory[I + 1] = (V[(opcode & 0x0F00) >> 8] / 10) % 10;
 						memory[I + 2] = (V[(opcode & 0x0F00) >> 8] % 100) % 10;
 						pc += 2;
+					break;
+					default:
+						terminal_printf(67, 26, "[color=red]ERR Unknown opcode: 0x%X\n", opcode);
 					break;
 				}
 			break;
