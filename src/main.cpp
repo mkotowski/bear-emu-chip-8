@@ -14,7 +14,7 @@ class BearTerminal
 public:
 	BearTerminal() = default;
 	~BearTerminal() = default;
-	
+
 	void Open() {
 		terminal_open();
 		terminal_set("window: title='CHIP-8 Emulator', resizeable=true, minimum-size=66x34, size=100x34");
@@ -360,11 +360,7 @@ int main(int argc, char const *argv[])
 		if (chip8.drawFlag)
 		{
 			// drawGraphics();
-			// terminal.PrintDebugInfo(chip8.V);
-			// terminal.Refresh();
 		}
-
-		// terminal_delay(20);
 
 		chip8.SetKeys();
 
@@ -382,7 +378,6 @@ int main(int argc, char const *argv[])
 		a = std::chrono::system_clock::now();
 		std::chrono::duration<double, std::milli> sleep_time = a - b;
 
-		// chip8.ClearArea(67, 31, 20, 1);
 		terminal_clear_area(67, 28, 30, 5);
 
 		terminal_printf(67, 28, "Delay timer: %d", chip8.delay_timer);
@@ -390,7 +385,9 @@ int main(int argc, char const *argv[])
 
 		terminal_printf(67, 31, "Sleep [color=gray]%f[/color] msc per frame", (sleep_time).count());
 		terminal_printf(67, 32, "Total [color=gray]%f[/color] msc per frame", (sleep_time + work_time).count());
+		
 		terminal.PrintDebugInfo(chip8.V, chip8.pc, chip8.I);
+
 		terminal.Refresh();
 
 		if(terminal_has_input())
