@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iterator>
 #include <vector>
+#include <time.h>
 
 #include "BearLibTerminal.h"
 
@@ -128,6 +129,8 @@ public:
 		// Reset timers
 		delay_timer = 0;
 		sound_timer = 0;
+
+		srand (time(NULL));
 	}
 
 	void LoadGame(const char* gameName) {
@@ -167,10 +170,10 @@ public:
 						}
 						pc += 2;
 					break;
-
 					case 0x000E: // 0x00EE: Returns from subroutine
-						pc = stack[sp];
 						--sp;
+						pc = stack[sp];
+						pc += 2;
 					break;
 					default:
 						terminal_printf(67, 26, "[color=red]ERR Unknown opcode: 0x%04X\n", opcode);
@@ -185,6 +188,35 @@ public:
 				++sp;
 				pc = opcode & 0x0FFF;
 			break;
+			case 0x3000: // 0x3XNN: Skips the next instruction if VX equals NN.
+				if(V[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF)) {
+					pc += 4;
+				}
+				else
+				{
+					pc += 2;
+				}
+			break;
+			case 0x4000:
+				// 0x4XNN: Skips the next instruction if VX doesn't equal NN.
+				if (V[(opcode & 0x0F00) >> 8] != (opcode & 0x00FF))
+				{
+					pc += 4;
+				}
+				else {
+					pc += 2;
+				}
+			break;
+			case 0x5000:
+				// 0x5XY0: Skips the next instruction if VX equals VY.
+				if (V[(opcode & 0x0F00) >> 8] == V[(opcode & 0x00F0) >> 4])
+				{
+					pc += 4;
+				}
+				else {
+					pc += 2;
+				}
+			break;
 			case 0x6000: // 0x6XNN: Sets VX to NN.
 				V[(opcode & 0x0F00) >> 8] = (opcode & 0x00FF);
 				pc += 2;
@@ -196,6 +228,21 @@ public:
 			case 0x8000:
 				switch(opcode & 0x000F)
 				{
+					case 0x0000:
+						// 0x8XY0: Sets VX to the value of VY
+						V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x00F0) >> 4];
+						pc += 2;
+					break;
+					case 0x0001:
+						// 0x8XY1: Sets VX to VX or VY. (Bitwise OR operation)
+						V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x0F00) >> 8] | V[(opcode & 0x00F0) >> 4];
+						pc += 2;
+					break;
+					case 0x0002:
+						// 0x8XY2: Sets VX to VX and VY. (Bitwise AND operation)
+						V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x0F00) >> 8] & V[(opcode & 0x00F0) >> 4];
+						pc += 2;
+					break;
 					case 0x0004: // 0x8XY4: Adds the value of VY to VX
 						if (V[(opcode & 0x00F0) >> 4] > (0xFF - V[(opcode & 0x0F00) >> 8]))
 						{
@@ -209,10 +256,30 @@ public:
 						V[(opcode & 0x0F00) >> 8] += V[(opcode & 0x00F0) >> 4];
 						pc += 2;
 					break;
+					case 0x0005: // 0x8XY5: VY is subtracted from VX. 
+						// VF is set to 0 when there's a borrow, and 1 when there isn't.
+						if (V[(opcode & 0x00F0) >> 4] > (V[(opcode & 0x0F00) >> 8]))
+						{
+							V[0xF] = 0; // Borrow
+						}
+						else
+						{
+							V[0xF] = 1;
+						}
+						V[(opcode & 0x0F00) >> 8] -= V[(opcode & 0x00F0) >> 4];
+						pc += 2;
+					default:
+						terminal_printf(67, 26, "[color=red]ERR Unknown opcode: 0x%04X\n", opcode);
+					break;
 				}
 			break;
 			case 0xA000: // 0xANNN: Sets I to the address NNN
 				I = opcode & 0x0FFF;
+				pc += 2;
+			break;
+			case 0xC000: // 0xCXNN: Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
+				// Vx=rand()&NN
+				V[(opcode & 0x0F00) >> 8] = (rand() % 0xFF) & (opcode & 0x00FF);
 				pc += 2;
 			break;
 			case 0xD000:
@@ -243,6 +310,35 @@ public:
 
 				drawFlag = true;
 				pc += 2;
+			break;
+			case 0xE000:
+				switch(opcode & 0x00FF)
+				{
+					case 0x009E:
+						// 0xEX9E: Skips the next instruction
+						// if the key stored in VX is pressed
+						if (key[V[(opcode & 0x0F00) >> 8]] != 0)
+						{
+							pc += 4;
+						}
+						else
+						{
+							pc += 2;
+						}
+					break;
+					case 0x00A1:
+						// 0xEXA1: Skips the next instruction
+						// if the key stored in VX isn't pressed
+						if (key[V[(opcode & 0x0F00) >> 8]] == 0)
+						{
+							pc += 4;
+						}
+						else
+						{
+							pc += 2;
+						}
+					break;
+				}
 			break;
 			case 0xF000:
 				switch(opcode & 0x00FF)
@@ -312,7 +408,16 @@ public:
 	}
 
 	void SetKeys() {
-
+		// Keypad                   Keyboard
+		// +-+-+-+-+                +-+-+-+-+
+		// |1|2|3|C|                |1|2|3|4|
+		// +-+-+-+-+                +-+-+-+-+
+		// |4|5|6|D|                |Q|W|E|R|
+		// +-+-+-+-+       =>       +-+-+-+-+
+		// |7|8|9|E|                |A|S|D|F|
+		// +-+-+-+-+                +-+-+-+-+
+		// |A|0|B|F|                |Z|X|C|V|
+		// +-+-+-+-+                +-+-+-+-+
 	}
 
 	void Clear() {
@@ -430,7 +535,7 @@ int main(int argc, char const *argv[])
 
 		// emulate one cycle of the system
 		chip8.EmulateCycle();
-
+		// terminal_delay(1000);
 		if (chip8.drawFlag)
 		{
 			// drawGraphics();
