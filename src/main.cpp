@@ -1,5 +1,8 @@
 #include <chrono>
 #include <thread>
+#include <fstream>
+#include <iterator>
+#include <vector>
 
 #include "BearLibTerminal.h"
 
@@ -15,7 +18,7 @@ public:
 		terminal_open();
 		terminal_set("window: title='CHIP-8 Emulator', resizeable=true, minimum-size=66x34, size=100x34");
 	}
-	void PrintDebugInfo(unsigned char * V) {
+	void PrintDebugInfo(unsigned char * V, unsigned short pc, unsigned short I) {
 		terminal_printf(67, 1,  "[color=orange]%s:[/color] 0x%04X%s", "V0", V[0], " [color=gray]" "nop");
 		terminal_printf(67, 2,  "[color=orange]%s:[/color] 0x%04X%s", "V1", V[1], " [color=gray]" "nop");
 		terminal_printf(67, 3,  "[color=orange]%s:[/color] 0x%04X%s", "V2", V[2], " [color=gray]" "nop");
@@ -32,7 +35,9 @@ public:
 		terminal_printf(67, 14, "[color=orange]%s:[/color] 0x%04X%s", "VD", V[13], " [color=gray]" "nop");
 		terminal_printf(67, 15, "[color=orange]%s:[/color] 0x%04X%s", "VE", V[14], " [color=gray]" "nop");
 		terminal_printf(67, 16, "[color=orange]%s:[/color] 0x%04X%s", "VF", V[15], " [color=gray]" "carry");
-		terminal_printf(67, 17, "[color=orange]%s:[/color] %s%s", "PC", "0x0000 " "[color=gray]", "nop");
+		
+		terminal_printf(67, 18, "[color=orange]%s:[/color] 0x%04X%s", "PC", pc, " [color=gray]" "nop");
+		terminal_printf(67, 19, "[color=orange]%s:[/color] 0x%04X%s", " I",  I, " [color=gray]" "nop");
 	}
 
 	void GameScreenFrame() {
@@ -105,6 +110,10 @@ public:
 		// Clear display	
 		// Clear stack
 		// Clear registers V0-VF
+		for (int i = 0; i < 0x10; ++i)
+		{
+			V[i] = 0x00;
+		}
 		// Clear memory
 		
 		// Load fontset
@@ -119,14 +128,18 @@ public:
 
 	void LoadGame(const char* gameName) {
 		// load the program into the memory (use fopen in binary mode)
-		int bufferSize = 0;
-		unsigned char buffer[4096];
+		
+		std::ifstream input( gameName, std::ios::binary );
+		// copies all data into buffer
+		std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(input), {});
 
-		for (int i = 0; i < bufferSize; ++i)
+		for (int i = 0; i < buffer.size(); ++i)
 		{
 			// 0x200 == 512
 			memory[i + 512] = buffer[i];
 		}
+
+		terminal_printf(67, 24, "File %s loaded.", gameName);
 	}
 
 	void EmulateCycle() {
@@ -135,8 +148,10 @@ public:
 		// specified by the program counter (pc).
 		opcode = memory[pc] << 8 | memory[pc + 1];
 
+		terminal_printf(67, 26, "Current opcode: 0x%04X", opcode);
+
 		// Decode Opcode
-		switch(opcode & 0xF00)
+		switch(opcode & 0xF000)
 		{
 			case 0x0000:
 				switch(opcode & 0x000F)
@@ -207,7 +222,7 @@ public:
 				}
 			break;
 			default:
-				terminal_printf(70, 19, "Unknown opcode: 0x%X\n", opcode);
+				terminal_printf(67, 26, "[color=red]ERR Unknown opcode: 0x%X\n", opcode);
 		}
 
 		// Update timers
@@ -326,14 +341,13 @@ int main(int argc, char const *argv[])
 	// setupInput();
 
 	terminal.Open();
-	// terminal.GameScreenFrame();
-	// terminal.PrintDebugInfo();
+	terminal.GameScreenFrame();
 	terminal.Refresh();
 
 	// Clear the memory, registers and screen
 	chip8.Initialize();
 	// Copy the program into the memory
-	chip8.LoadGame("pong");
+	chip8.LoadGame("./roms/pong.rom");
 
 	// while (terminal_read() != TK_CLOSE);
 	int terminal_input = -1;
@@ -341,12 +355,8 @@ int main(int argc, char const *argv[])
 	// emulation loop
 	while(true)
 	{
-		// Maintain designated frequency of 10 Hz (200 ms per frame)
+		// Maintain designated frequency of 60 Hz (16.(6) ms per frame)
 		a = std::chrono::system_clock::now();
-
-		chip8.drawFlag = true;
-
-		// printf("Time: %f \n", (work_time + sleep_time).count());
 
 		// emulate one cycle of the system
 		chip8.EmulateCycle();
@@ -354,9 +364,8 @@ int main(int argc, char const *argv[])
 		if (chip8.drawFlag)
 		{
 			// drawGraphics();
-			terminal.GameScreenFrame();
-			terminal.PrintDebugInfo(chip8.V);
-			terminal.Refresh();
+			// terminal.PrintDebugInfo(chip8.V);
+			// terminal.Refresh();
 		}
 
 		// terminal_delay(20);
@@ -368,8 +377,6 @@ int main(int argc, char const *argv[])
 		
 		if (work_time.count() < 16.666)
 		{
-			if(chip8.V[1] > 200) chip8.V[1] = 0;
-			chip8.V[1]++;
 			std::chrono::duration<double, std::milli> delta_ms(16.666 - work_time.count());
 			auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
 			// std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
@@ -380,9 +387,14 @@ int main(int argc, char const *argv[])
 		std::chrono::duration<double, std::milli> sleep_time = a - b;
 
 		// chip8.ClearArea(67, 31, 20, 1);
-		terminal_printf(67, 31, "Sleep  [color=gray]%f[/color] msc per frame", (sleep_time).count());
+		terminal_clear_area(67, 28, 30, 5);
+
+		terminal_printf(67, 28, "Delay timer: %d", chip8.delay_timer);
+		terminal_printf(67, 29, "Sound timer: %d", chip8.sound_timer);
+
+		terminal_printf(67, 31, "Sleep [color=gray]%f[/color] msc per frame", (sleep_time).count());
 		terminal_printf(67, 32, "Total [color=gray]%f[/color] msc per frame", (sleep_time + work_time).count());
-		terminal_printf(67,29, "Delay timer: %d", chip8.delay_timer);
+		terminal.PrintDebugInfo(chip8.V, chip8.pc, chip8.I);
 		terminal.Refresh();
 
 		if(terminal_has_input())
