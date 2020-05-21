@@ -11,6 +11,19 @@ public:
 	void Print() {
 		terminal_print(1, 1, "Hello, world!");
 	}
+	void GameScreenFrame() {
+		terminal_print
+		(
+			5, 11,
+			L"   ┌────────┐  \n"
+			L"   │!......s└─┐\n"
+			L"┌──┘........s.│\n"
+			L"│............>│\n"
+			L"│...........┌─┘\n"
+			L"│<.@..┌─────┘  \n"
+			L"└─────┘        \n"
+		);
+	}
 	void Refresh() {
 		terminal_refresh();
 	}
@@ -54,6 +67,7 @@ int main(int argc, char const *argv[])
 
 	terminal.Open();
 	terminal.Print();
+	terminal.GameScreenFrame();
 	terminal.Refresh();
 	terminal.Loop();
 	terminal.Close();

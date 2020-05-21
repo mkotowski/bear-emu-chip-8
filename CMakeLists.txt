@@ -47,6 +47,11 @@ set_target_properties(bearlibterminal PROPERTIES
 	IMPORTED_LOCATION 
 	"${CMAKE_CURRENT_SOURCE_DIR}/libs/bearlibterminal/BearLibTerminal.lib")
 
+# ENFORCE UTF-8 COMPATIBILITY ########################################
+
+add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+
 # EXECUTABLE #########################################################
 
 set(CMAKE_EXE_LINKER_FLAGS 
