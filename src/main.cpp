@@ -15,22 +15,22 @@ public:
 		terminal_open();
 		terminal_set("window: title='CHIP-8 Emulator', resizeable=true, minimum-size=66x34, size=100x34");
 	}
-	void PrintDebugInfo() {
-		terminal_printf(67, 1,  "[color=orange]%s:[/color] %s%s", "V0", "0xA2F0 " "[color=gray]", "mvi 2F0h");
-		terminal_printf(67, 2,  "[color=orange]%s:[/color] %s%s", "V1", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 3,  "[color=orange]%s:[/color] %s%s", "V2", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 4,  "[color=orange]%s:[/color] %s%s", "V3", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 5,  "[color=orange]%s:[/color] %s%s", "V4", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 6,  "[color=orange]%s:[/color] %s%s", "V5", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 7,  "[color=orange]%s:[/color] %s%s", "V6", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 8,  "[color=orange]%s:[/color] %s%s", "V7", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 9,  "[color=orange]%s:[/color] %s%s", "V8", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 10, "[color=orange]%s:[/color] %s%s", "V9", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 11, "[color=orange]%s:[/color] %s%s", "VA", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 12, "[color=orange]%s:[/color] %s%s", "VB", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 13, "[color=orange]%s:[/color] %s%s", "VC", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 14, "[color=orange]%s:[/color] %s%s", "VD", "0x0000 " "[color=gray]", "nop");
-		terminal_printf(67, 15, "[color=orange]%s:[/color] %s%s", "VE", "0x0000 " "[color=gray]", "nop");
+	void PrintDebugInfo(unsigned char * V) {
+		terminal_printf(67, 1,  "[color=orange]%s:[/color] %s%s", "V0", "0xA2F0", " [color=gray]" "mvi 2F0h");
+		terminal_printf(67, 2,  "[color=orange]%s:[/color] 0x%04X%s", "V1", V[1], " [color=gray]" "nop");
+		terminal_printf(67, 3,  "[color=orange]%s:[/color] %s%s", "V2", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 4,  "[color=orange]%s:[/color] %s%s", "V3", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 5,  "[color=orange]%s:[/color] %s%s", "V4", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 6,  "[color=orange]%s:[/color] %s%s", "V5", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 7,  "[color=orange]%s:[/color] %s%s", "V6", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 8,  "[color=orange]%s:[/color] %s%s", "V7", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 9,  "[color=orange]%s:[/color] %s%s", "V8", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 10, "[color=orange]%s:[/color] %s%s", "V9", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 11, "[color=orange]%s:[/color] %s%s", "VA", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 12, "[color=orange]%s:[/color] %s%s", "VB", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 13, "[color=orange]%s:[/color] %s%s", "VC", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 14, "[color=orange]%s:[/color] %s%s", "VD", "0x0000", " [color=gray]" "nop");
+		terminal_printf(67, 15, "[color=orange]%s:[/color] %s%s", "VE", "0x0000", " [color=gray]" "nop");
 
 		terminal_printf(67, 17, "[color=orange]%s:[/color] %s%s", "PC", "0x0000 " "[color=gray]", "nop");
 	}
@@ -156,7 +156,7 @@ public:
 
 	bool drawFlag = false;
 
-private:
+// private:
 	// the current opcode
 	unsigned short opcode;
 
@@ -214,7 +214,7 @@ int main(int argc, char const *argv[])
 	terminal.Open();
 	// terminal.GameScreenFrame();
 	// terminal.PrintDebugInfo();
-	// terminal.Refresh();
+	terminal.Refresh();
 
 	// Clear the memory, registers and screen
 	chip8.Initialize();
@@ -227,20 +227,8 @@ int main(int argc, char const *argv[])
 	// emulation loop
 	while(true)
 	{
-		// Maintain designated frequency of 60 Hz (2400 ms per frame)
-		// a = std::chrono::system_clock::now();
-		// std::chrono::duration<double, std::milli> work_time = a - b;
-		
-		// if (work_time.count() < 2400.0)
-		// {
-		// 	std::chrono::duration<double, std::milli> delta_ms(2400.0 - work_time.count());
-		// 	auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
-		// 	std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
-		// }
-
-		// b = std::chrono::system_clock::now();
-		// std::chrono::duration<double, std::milli> sleep_time = b - a;
-
+		// Maintain designated frequency of 10 Hz (200 ms per frame)
+		a = std::chrono::system_clock::now();
 
 		chip8.drawFlag = true;
 
@@ -253,20 +241,43 @@ int main(int argc, char const *argv[])
 		{
 			// drawGraphics();
 			terminal.GameScreenFrame();
-			terminal.PrintDebugInfo();
-			terminal_print(7,7,"Updated");
+			terminal.PrintDebugInfo(chip8.V);
 			terminal.Refresh();
 		}
 
+		// terminal_delay(20);
+
 		chip8.SetKeys();
 
-		// int key = terminal_read();
-
-		terminal_input = terminal_read();
-
-		if (terminal_input == TK_CLOSE || terminal_input == TK_ESCAPE)
+		b = std::chrono::system_clock::now();
+		std::chrono::duration<double, std::milli> work_time = b - a;
+		
+		if (work_time.count() < 16.666)
 		{
-			break;
+			if(chip8.V[1] > 200) chip8.V[1] = 0;
+			chip8.V[1]++;
+			std::chrono::duration<double, std::milli> delta_ms(16.666 - work_time.count());
+			auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
+			// std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
+			terminal_delay(delta_ms_duration.count());
+		}
+
+		a = std::chrono::system_clock::now();
+		std::chrono::duration<double, std::milli> sleep_time = a - b;
+
+		// chip8.ClearArea(67, 31, 20, 1);
+		terminal_printf(67, 31, "Sleep  [color=gray]%f[/color] msc per frame", (sleep_time).count());
+		terminal_printf(67, 32, "Total [color=gray]%f[/color] msc per frame", (sleep_time + work_time).count());
+		terminal.Refresh();
+
+		if(terminal_has_input())
+		{
+			terminal_input = terminal_read();
+
+			if (terminal_input == TK_CLOSE || terminal_input == TK_ESCAPE)
+			{
+				break;
+			}
 		}
 	}
 
