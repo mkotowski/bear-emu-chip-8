@@ -7,21 +7,49 @@ public:
 	~BearTerminal() = default;
 	void Open() {
 		terminal_open();
+		terminal_set("window: title='CHIP-8 Emulator', resizeable=true, minimum-size=66x34, size=66x34");
 	}
 	void Print() {
 		terminal_print(1, 1, "Hello, world!");
 	}
 	void GameScreenFrame() {
-		terminal_print
+		terminal_print //64 * 32
 		(
-			5, 11,
-			L"   ┌────────┐  \n"
-			L"   │!......s└─┐\n"
-			L"┌──┘........s.│\n"
-			L"│............>│\n"
-			L"│...........┌─┘\n"
-			L"│<.@..┌─────┘  \n"
-			L"└─────┘        \n"
+			0, 0,
+			L"┌────────────────────────────────────────────────────────────────┐\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"│                                                                │\n"
+			L"└────────────────────────────────────────────────────────────────┘\n"
 		);
 	}
 	void Refresh() {
@@ -29,7 +57,9 @@ public:
 	}
 	void Loop() {
 		// Wait until user close the window
-		while (terminal_read() != TK_CLOSE);
+		while (terminal_read() != TK_CLOSE) {
+			// terminal_refresh();
+		}
 	}
 	void Close() {
 		terminal_close();
