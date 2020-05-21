@@ -97,44 +97,137 @@ public:
 
 	void Initialize() {
 		// Initialize registers and memory once
+		pc = 0x200; // Program counter starts at 0x200
+		opcode = 0; // Reset current opcode
+		I      = 0; // Reset current register
+		sp     = 0; // Reset stack pointer
+
+		// Clear display	
+		// Clear stack
+		// Clear registers V0-VF
+		// Clear memory
+		
+		// Load fontset
+		for(int i = 0; i < 80; ++i) {
+			memory[i] = chip8_fontset[i];		
+		}
+
+		// Reset timers
+		delay_timer = 0;
+		sound_timer = 0;
 	}
 
 	void LoadGame(const char* gameName) {
+		// load the program into the memory (use fopen in binary mode)
+		int bufferSize = 0;
+		unsigned char buffer[4096];
 
+		for (int i = 0; i < bufferSize; ++i)
+		{
+			// 0x200 == 512
+			memory[i + 512] = buffer[i];
+		}
 	}
 
 	void EmulateCycle() {
 		// Fetch Opcode
 		// Fetch one opcode from the memory at the location
-		// specofoed by the program counter (pc).
-		pc = 0x200;
-		memory[pc]     = 0xA2;
-		memory[pc + 1] = 0xF0;
+		// specified by the program counter (pc).
 		opcode = memory[pc] << 8 | memory[pc + 1];
 
 		// Decode Opcode
-		// TODO:
-		const unsigned short ANNN_Mask = 0xA000;
-		
-		// Execute Opcode
-		I = opcode & 0x0FFF;
-		pc += 2;
+		switch(opcode & 0xF00)
+		{
+			case 0x0000:
+				switch(opcode & 0x000F)
+				{
+					case 0x0000: // 0x00E0: Clears the screen
+					break;
 
-		// Update timers
-		if(delay_timer > 0) {
-			delay_timer--;
+					case 0x000E: // 0x00EE: Returns from subroutine
+					break;
+				}
+			case 0x2000: // 0x2NNN: Calls the subroutine at address NNN
+				stack[sp] = pc;
+				++sp;
+				pc = opcode & 0x0FFF;
+			break;
+			case 0x6000: // 0x6XNN: Sets VX to NN.
+				V[(opcode & 0x0F00) >> 8] = (opcode & 0x00FF);
+				pc += 2;
+			break;
+			case 0x8000:
+				switch(opcode & 0x000F)
+				{
+					case 0x0004: // 0x8XY4: Adds the value of VY to VX
+						if (V[(opcode & 0x00F0) >> 4] > (0xFF - V[(opcode & 0x0F00) >> 8]))
+						{
+							V[0xF] = 1; // Carry
+						}
+						else
+						{
+							V[0xF] = 0;
+						}
 
-			if(delay_timer == 0) {
-				terminal_print(70,21,"delay fired!");
-			}
+						V[(opcode & 0x0F00) >> 8] += V[(opcode & 0x00F0) >> 4];
+						pc += 2;
+					break;
+				}
+			break;
+			case 0xA000: // 0xANNN: Sets I to the address NNN
+				I = opcode & 0x0FFF;
+				pc += 2;
+			break;
+			case 0xD000:
+				// 0xDXYN: Draws a sprite at coordinate (VX, VY) that has 
+				//         a width of 8 pixels and a height of N pixels.
+
+			break;
+			case 0xF000:
+				switch(opcode & 0x00FF)
+				{
+					case 0x0007: // 0xFX07: Sets VX to the value of the delay timer
+						// Vx = get_delay()
+						V[(opcode & 0x0F00) >> 8] = delay_timer;
+						pc += 2;
+					break;
+					case 0x0015: // 0xFX15: Sets the delay timer to VX.
+						// delay_timer(Vx)
+						delay_timer = V[(opcode & 0x0F00) >> 8];
+						pc += 2;
+					break;
+					case 0x0033:
+						// 0xFX33: Stores the binary-coded decimal representation of VX
+						//         at the addresses I, I plus 1, and I plus 2
+						memory[I]     = V[(opcode & 0x0F00) >> 8] / 100;
+						memory[I + 1] = (V[(opcode & 0x0F00) >> 8] / 10) % 10;
+						memory[I + 2] = (V[(opcode & 0x0F00) >> 8] % 100) % 10;
+						pc += 2;
+					break;
+				}
+			break;
+			default:
+				terminal_printf(70, 19, "Unknown opcode: 0x%X\n", opcode);
 		}
 
-		if(sound_timer > 0) {
-			sound_timer--;
+		// Update timers
+		if(delay_timer > 0)
+		{
+			--delay_timer;
 
-			if(sound_timer == 0) {
+			// if(delay_timer == 0) {
+			// 	terminal_print(70,21,"delay fired!");
+			// }
+		}
+
+		if(sound_timer > 0)
+		{
+			if(sound_timer == 1)
+			{
 				terminal_print(70,20,"sound fired!");
 			}
+
+			--sound_timer;
 		}
 	}
 
@@ -197,6 +290,27 @@ public:
 	// a hex based keypad
 	// to store the current state of the key
 	unsigned char key[16];
+
+	// Each number or character is 4 pixels wide and 5 pixel high.
+	unsigned char chip8_fontset[80] =
+	{
+		0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+		0x20, 0x60, 0x20, 0x20, 0x70, // 1
+		0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+		0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+		0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+		0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+		0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+		0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+		0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+		0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+		0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+		0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+		0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+		0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+		0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+	};
 };
 
 // using frames = duration<int64_t, ratio<1, 60>>;
