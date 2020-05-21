@@ -379,7 +379,7 @@ public:
 						pc += 2;
 					break;
 					case 0x0029:
-						I = V[((opcode & 0x0F00) >> 8)];
+						I = V[((opcode & 0x0F00) >> 8)] * 5;
 						pc += 2;
 					break;
 					default:
