@@ -100,8 +100,18 @@ public:
 		I      = 0; // Reset current register
 		sp     = 0; // Reset stack pointer
 
-		// Clear display	
+		// Clear display
+		for (int i = 0; i < 64 * 32; ++i)
+		{
+			gfx[i] = 0;
+		}
+
 		// Clear stack
+		for (int i = 0; i < 0x10; ++i)
+		{
+			stack[i] = 0;
+		}
+
 		// Clear registers V0-VF
 		for (int i = 0; i < 0x10; ++i)
 		{
@@ -187,8 +197,31 @@ public:
 				pc += 2;
 			break;
 			case 0xD000:
-				// 0xDXYN: Draws a sprite at coordinate (VX, VY) that has 
-				//         a width of 8 pixels and a height of N pixels.
+				x = V[(opcode & 0x0F00) >> 8];
+				y = V[(opcode & 0x00F0) >> 4];
+				height = opcode & 0x000F;
+				// pixel;
+
+				V[0xF] = 0;
+
+				for (int yline = 0; yline < height; yline++)
+				{
+					pixel = memory[I + yline];
+
+					for (int xline = 0; xline < 8; xline++)
+					{
+						if ((pixel & (0x80 >> xline)) != 0)
+						{
+							if (gfx[(x + xline + ((y + yline) * 64))] == 1)
+							{
+								V[0xF] = 1;
+							}
+							gfx[(x + xline + ((y + yline) * 64))] ^= 1;
+						}
+					}
+				}
+
+				drawFlag = true;
 				pc += 2;
 			break;
 			case 0xF000:
@@ -322,6 +355,11 @@ public:
 		0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
 		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 	};
+
+	unsigned short x;
+	unsigned short y;
+	unsigned short height;
+	unsigned short pixel;
 };
 
 // using frames = duration<int64_t, ratio<1, 60>>;
@@ -360,6 +398,18 @@ int main(int argc, char const *argv[])
 		if (chip8.drawFlag)
 		{
 			// drawGraphics();
+			for (int i = 0; i < 64 ; ++i)
+			{
+				for (int j = 0; j < 32; ++j)
+				{
+					if (chip8.gfx[i * (j+1)] == 1)
+					{
+						terminal_printf(i+1,j+1,"█");
+					} else {
+						terminal_printf(i+1,j+1," ");
+					}
+				}
+			}
 		}
 
 		chip8.SetKeys();
