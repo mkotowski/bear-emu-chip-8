@@ -1,4 +1,10 @@
+#include <chrono>
+#include <thread>
+
 #include "BearLibTerminal.h"
+
+std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
+std::chrono::system_clock::time_point b = std::chrono::system_clock::now();
 
 class BearTerminal
 {
@@ -28,6 +34,7 @@ public:
 
 		terminal_printf(67, 17, "[color=orange]%s:[/color] %s%s", "PC", "0x0000 " "[color=gray]", "nop");
 	}
+
 	void GameScreenFrame() {
 		terminal_print //64 * 32
 		(
@@ -100,10 +107,16 @@ public:
 		// Fetch Opcode
 		// Fetch one opcode from the memory at the location
 		// specofoed by the program counter (pc).
+		memory[pc]     == 0xA2
+		memory[pc + 1] == 0xF0
 		opcode = memory[pc] << 8 | memory[pc + 1];
 
 		// Decode Opcode
+		const unsigned short ANNN_Mask = 0xA000;
+		
 		// Execute Opcode
+		I = opcode & 0x0FFF;
+		pc += 2;
 
 		// Update timers
 	}
@@ -194,6 +207,22 @@ int main(int argc, char const *argv[])
 	// emulation loop
 	while(!terminal.ShouldClose())
 	{
+		// Maintain designated frequency of 60 Hz (2400 ms per frame)
+		a = std::chrono::system_clock::now();
+		std::chrono::duration<double, std::milli> work_time = a - b;
+		
+		if (work_time.count() < 2400.0)
+		{
+			std::chrono::duration<double, std::milli> delta_ms(200.0 - work_time.count());
+			auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
+			std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
+		}
+
+		b = std::chrono::system_clock::now();
+		std::chrono::duration<double, std::milli> sleep_time = b - a;
+
+		// printf("Time: %f \n", (work_time + sleep_time).count());
+
 		// emulate one cycle of the system
 		chip8.EmulateCycle();
 
