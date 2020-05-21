@@ -14,26 +14,13 @@ class BearTerminal
 public:
 	BearTerminal() = default;
 	~BearTerminal() = default;
+	
 	void Open() {
 		terminal_open();
 		terminal_set("window: title='CHIP-8 Emulator', resizeable=true, minimum-size=66x34, size=100x34");
 	}
+
 	void PrintDebugInfo(unsigned char * V, unsigned short pc, unsigned short I) {
-		// terminal_printf(67, 1,  "[color=orange]%s:[/color] 0x%04X%s", "V0", V[0], " [color=gray]%d", V[0]);
-		// terminal_printf(67, 2,  "[color=orange]%s:[/color] 0x%04X%s", "V1", V[1], " [color=gray]%d");
-		// terminal_printf(67, 3,  "[color=orange]%s:[/color] 0x%04X%s", "V2", V[2], " [color=gray]%d");
-		// terminal_printf(67, 4,  "[color=orange]%s:[/color] 0x%04X%s", "V3", V[3], " [color=gray]%d");
-		// terminal_printf(67, 5,  "[color=orange]%s:[/color] 0x%04X%s", "V4", V[4], " [color=gray]%d");
-		// terminal_printf(67, 6,  "[color=orange]%s:[/color] 0x%04X%s", "V5", V[5], " [color=gray]%d");
-		// terminal_printf(67, 7,  "[color=orange]%s:[/color] 0x%04X%s", "V6", V[6], " [color=gray]%d");
-		// terminal_printf(67, 8,  "[color=orange]%s:[/color] 0x%04X%s", "V7", V[7], " [color=gray]%d");
-		// terminal_printf(67, 9,  "[color=orange]%s:[/color] 0x%04X%s", "V8", V[8], " [color=gray]%d");
-		// terminal_printf(67, 10, "[color=orange]%s:[/color] 0x%04X%s", "V9", V[9], " [color=gray]%d");
-		// terminal_printf(67, 11, "[color=orange]%s:[/color] 0x%04X%s", "VA", V[10], " [color=gray]%d");
-		// terminal_printf(67, 12, "[color=orange]%s:[/color] 0x%04X%s", "VB", V[11], " [color=gray]%d");
-		// terminal_printf(67, 13, "[color=orange]%s:[/color] 0x%04X%s", "VC", V[12], " [color=gray]%d");
-		// terminal_printf(67, 14, "[color=orange]%s:[/color] 0x%04X%s", "VD", V[13], " [color=gray]%d");
-		// terminal_printf(67, 15, "[color=orange]%s:[/color] 0x%04X%s", "VE", V[14], " [color=gray]%d");
 
 		for (int i = 0; i < 0x10; ++i)
 		{
