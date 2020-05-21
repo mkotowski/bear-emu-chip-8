@@ -35,25 +35,44 @@ file(GLOB
 # WINTOAST LIB #######################################################
 
 file(GLOB 
-	WINTOAST_SOURCE_FILES 
+	BEARLIBTERMINAL_HEADER_FILES 
 	CONFIGURE_DEPENDS 
-	"${PROJECT_SOURCE_DIR}/libs/wintoast/*.cpp")
+	"${PROJECT_SOURCE_DIR}/libs/bearlibterminal/*.h")
 
-file(GLOB 
-	WINTOAST_HEADER_FILES 
-	CONFIGURE_DEPENDS 
-	"${PROJECT_SOURCE_DIR}/libs/wintoast/*.h")
+# BEARLIBTERMINAL LIBRARY ############################################
+
+add_library(bearlibterminal STATIC IMPORTED)
+
+set_target_properties(bearlibterminal PROPERTIES 
+	IMPORTED_LOCATION 
+	"${CMAKE_CURRENT_SOURCE_DIR}/libs/bearlibterminal/BearLibTerminal.lib")
 
 # EXECUTABLE #########################################################
 
+set(CMAKE_EXE_LINKER_FLAGS 
+	"${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+
 add_executable(BearEmuChip8  
 	"${SOURCE_FILES}" "${HEADER_FILES}"
-	"${WINTOAST_SOURCE_FILES}" "${WINTOAST_HEADER_FILES}"
+	"${BEARLIBTERMINAL_HEADER_FILES}"
 	)
 
 target_include_directories(BearEmuChip8 PUBLIC
 	"${PROJECT_SOURCE_DIR}/include"
-	"${PROJECT_SOURCE_DIR}/libs/wintoast"
+	"${PROJECT_SOURCE_DIR}/libs/bearlibterminal"
+	)
+
+target_link_libraries(BearEmuChip8 PUBLIC
+	bearlibterminal
+	)
+
+set_target_properties(BearEmuChip8 PROPERTIES CXX_STANDARD 17)
+
+add_custom_command(
+	TARGET BearEmuChip8 POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different
+	        ${CMAKE_SOURCE_DIR}/libs/bearlibterminal/BearLibTerminal.dll
+	        $<TARGET_FILE_DIR:BearEmuChip8>
 	)
 
 # DOCUMENTATION ######################################################

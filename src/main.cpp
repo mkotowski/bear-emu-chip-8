@@ -1,3 +1,27 @@
+#include "BearLibTerminal.h"
+
+class BearTerminal
+{
+public:
+	BearTerminal() = default;
+	~BearTerminal() = default;
+	void Open() {
+		terminal_open();
+	}
+	void Print() {
+		terminal_print(1, 1, "Hello, world!");
+	}
+	void Refresh() {
+		terminal_refresh();
+	}
+	void Loop() {
+		// Wait until user close the window
+		while (terminal_read() != TK_CLOSE);
+	}
+	void Close() {
+		terminal_close();
+	}
+};
 
 int main(int argc, char const *argv[])
 {
@@ -25,6 +49,14 @@ int main(int argc, char const *argv[])
 	// the screen's pixel states
 	// the screen has total of 2048 pixels
 	unsigned char gfx[64 * 32];
+
+	BearTerminal terminal;
+
+	terminal.Open();
+	terminal.Print();
+	terminal.Refresh();
+	terminal.Loop();
+	terminal.Close();
 
 	return 0;
 }
