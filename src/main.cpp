@@ -160,9 +160,15 @@ public:
 				switch(opcode & 0x000F)
 				{
 					case 0x0000: // 0x00E0: Clears the screen
+						for (int i = 0; i < 64 * 32; ++i)
+						{
+							gfx[i] = 0;
+						}
+						pc += 2;
 					break;
 
 					case 0x000E: // 0x00EE: Returns from subroutine
+						terminal_printf(67, 26, "[color=red]ERR Unknown opcode: 0x%X\n", opcode);
 					break;
 				}
 			case 0x2000: // 0x2NNN: Calls the subroutine at address NNN
@@ -243,6 +249,18 @@ public:
 						memory[I]     = V[(opcode & 0x0F00) >> 8] / 100;
 						memory[I + 1] = (V[(opcode & 0x0F00) >> 8] / 10) % 10;
 						memory[I + 2] = (V[(opcode & 0x0F00) >> 8] % 100) % 10;
+						pc += 2;
+					break;
+					case 0x0065:
+						// 0xFX65: 
+						// Fills V0 to VX (including VX) with values from memory 
+						// starting at address I. The offset from I is increased 
+						// by 1 for each value written, but I itself 
+						// is left unmodified.
+						for (int i = 0; i <= ((opcode & 0x0F00) >> 8); ++i)
+						{
+							V[i] = memory[I+i];
+						}
 						pc += 2;
 					break;
 					default:
