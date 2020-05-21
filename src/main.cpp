@@ -52,22 +52,49 @@ public:
 			L"└────────────────────────────────────────────────────────────────┘\n"
 		);
 	}
+
 	void Refresh() {
 		terminal_refresh();
 	}
-	void Loop() {
-		// Wait until user close the window
-		while (terminal_read() != TK_CLOSE) {
-			// terminal_refresh();
-		}
-	}
+
 	void Close() {
 		terminal_close();
 	}
+
+	bool ShouldClose() {
+		return !(terminal_read() != TK_CLOSE);
+	}
 };
 
-int main(int argc, char const *argv[])
+class Chip8
 {
+public:
+	Chip8() = default;
+	~Chip8() = default;
+
+	void Initialize() {
+		// Initialize registers and memory once
+	}
+
+	void LoadGame(const char* gameName) {
+
+	}
+
+	void EmulateCycle() {
+		// Fetch Opcode
+		// Decode Opcode
+		// Execute Opcode
+
+		// Update timers
+	}
+
+	void SetKeys() {
+
+	}
+
+	bool drawFlag = false;
+
+private:
 	// the current opcode
 	unsigned short opcode;
 
@@ -93,13 +120,63 @@ int main(int argc, char const *argv[])
 	// the screen has total of 2048 pixels
 	unsigned char gfx[64 * 32];
 
+	// time registers that count at 60 Hz
+	// when set above zero they will count down to zero
+	unsigned char delay_timer;
+	unsigned char sound_timer;
+
+	// the system's buzzer
+	
+	// stack
+	unsigned short stack[16];
+	// stack pointer
+	unsigned short sp;
+
+	// a hex based keypad
+	// to store the current state of the key
+	unsigned char key[16];
+};
+
+int main(int argc, char const *argv[])
+{
 	BearTerminal terminal;
+	Chip8 chip8;
 
 	terminal.Open();
-	terminal.Print();
 	terminal.GameScreenFrame();
+	terminal.Print();
 	terminal.Refresh();
-	terminal.Loop();
+
+	chip8.Initialize();
+	chip8.LoadGame("pong");
+
+	// while (terminal_read() != TK_CLOSE);
+
+	// emulation loop
+	while(!terminal.ShouldClose())
+	{
+		// emulate one cycle
+		chip8.EmulateCycle();
+
+		if (chip8.drawFlag)
+		{
+			// drawGraphics();
+		}
+
+		chip8.SetKeys();
+
+		int key = terminal_read();
+
+		if (key == TK_CLOSE || key == TK_ESCAPE)
+		{
+			break;
+		}
+
+		// terminal.GameScreenFrame();
+		// terminal.Print();
+		// terminal.Refresh();
+	}
+
 	terminal.Close();
 
 	return 0;
