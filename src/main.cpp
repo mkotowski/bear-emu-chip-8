@@ -85,7 +85,7 @@ public:
 	}
 
 	bool ShouldClose() {
-		return !(terminal_read() != TK_CLOSE);
+		return (terminal_read() != TK_CLOSE);
 	}
 };
 
@@ -107,11 +107,13 @@ public:
 		// Fetch Opcode
 		// Fetch one opcode from the memory at the location
 		// specofoed by the program counter (pc).
-		memory[pc]     == 0xA2
-		memory[pc + 1] == 0xF0
+		pc = 0x200;
+		memory[pc]     = 0xA2;
+		memory[pc + 1] = 0xF0;
 		opcode = memory[pc] << 8 | memory[pc + 1];
 
 		// Decode Opcode
+		// TODO:
 		const unsigned short ANNN_Mask = 0xA000;
 		
 		// Execute Opcode
@@ -119,6 +121,21 @@ public:
 		pc += 2;
 
 		// Update timers
+		if(delay_timer > 0) {
+			delay_timer--;
+
+			if(delay_timer == 0) {
+				terminal_print(2,2,"delay fired!");
+			}
+		}
+
+		if(sound_timer > 0) {
+			sound_timer--;
+
+			if(sound_timer == 0) {
+				terminal_print(3,3,"sound fired!");
+			}
+		}
 	}
 
 	void SetKeys() {
@@ -167,8 +184,8 @@ private:
 
 	// time registers that count at 60 Hz
 	// when set above zero they will count down to zero
-	unsigned char delay_timer;
-	unsigned char sound_timer;
+	unsigned char delay_timer = 10000;
+	unsigned char sound_timer = 0;
 
 	// the system's buzzer
 	
@@ -182,6 +199,8 @@ private:
 	unsigned char key[16];
 };
 
+// using frames = duration<int64_t, ratio<1, 60>>;
+
 int main(int argc, char const *argv[])
 {
 	BearTerminal terminal;
@@ -193,9 +212,9 @@ int main(int argc, char const *argv[])
 	// setupInput();
 
 	terminal.Open();
-	terminal.GameScreenFrame();
-	terminal.PrintDebugInfo();
-	terminal.Refresh();
+	// terminal.GameScreenFrame();
+	// terminal.PrintDebugInfo();
+	// terminal.Refresh();
 
 	// Clear the memory, registers and screen
 	chip8.Initialize();
@@ -203,23 +222,27 @@ int main(int argc, char const *argv[])
 	chip8.LoadGame("pong");
 
 	// while (terminal_read() != TK_CLOSE);
+	int terminal_input = -1;
 
 	// emulation loop
-	while(!terminal.ShouldClose())
+	while(true)
 	{
 		// Maintain designated frequency of 60 Hz (2400 ms per frame)
-		a = std::chrono::system_clock::now();
-		std::chrono::duration<double, std::milli> work_time = a - b;
+		// a = std::chrono::system_clock::now();
+		// std::chrono::duration<double, std::milli> work_time = a - b;
 		
-		if (work_time.count() < 2400.0)
-		{
-			std::chrono::duration<double, std::milli> delta_ms(200.0 - work_time.count());
-			auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
-			std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
-		}
+		// if (work_time.count() < 2400.0)
+		// {
+		// 	std::chrono::duration<double, std::milli> delta_ms(2400.0 - work_time.count());
+		// 	auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
+		// 	std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
+		// }
 
-		b = std::chrono::system_clock::now();
-		std::chrono::duration<double, std::milli> sleep_time = b - a;
+		// b = std::chrono::system_clock::now();
+		// std::chrono::duration<double, std::milli> sleep_time = b - a;
+
+
+		chip8.drawFlag = true;
 
 		// printf("Time: %f \n", (work_time + sleep_time).count());
 
@@ -231,6 +254,7 @@ int main(int argc, char const *argv[])
 			// drawGraphics();
 			terminal.GameScreenFrame();
 			terminal.PrintDebugInfo();
+			terminal_print(7,7,"Updated");
 			terminal.Refresh();
 		}
 
@@ -238,10 +262,12 @@ int main(int argc, char const *argv[])
 
 		// int key = terminal_read();
 
-		// if (key == TK_CLOSE || key == TK_ESCAPE)
-		// {
-		// 	break;
-		// }
+		terminal_input = terminal_read();
+
+		if (terminal_input == TK_CLOSE || terminal_input == TK_ESCAPE)
+		{
+			break;
+		}
 	}
 
 	terminal.Close();
