@@ -20,7 +20,7 @@ public:
 		terminal_set("window: title='CHIP-8 Emulator', resizeable=true, minimum-size=66x34, size=100x34");
 	}
 
-	void PrintDebugInfo(unsigned char * V, unsigned short pc, unsigned short I) {
+	void PrintDebugInfo(unsigned char * V, unsigned short pc, unsigned short I, unsigned char * memory) {
 
 		for (int i = 0; i < 0x10; ++i)
 		{
@@ -31,6 +31,7 @@ public:
 		
 		terminal_printf(67, 18, "[color=orange]%s:[/color] 0x%04X%s", "PC", pc, " [color=gray]" "(program counter)");
 		terminal_printf(67, 19, "[color=orange]%s:[/color] 0x%04X%s", " I",  I, " [color=gray]" "nop");
+		terminal_printf(67, 20, "%04x", memory[0]);
 	}
 
 	void GameScreenFrame() {
@@ -168,9 +169,17 @@ public:
 					break;
 
 					case 0x000E: // 0x00EE: Returns from subroutine
-						terminal_printf(67, 26, "[color=red]ERR Unknown opcode: 0x%X\n", opcode);
+						pc = stack[sp];
+						--sp;
+					break;
+					default:
+						terminal_printf(67, 26, "[color=red]ERR Unknown opcode: 0x%04X\n", opcode);
 					break;
 				}
+			break;
+			case 0x1000:
+				pc = opcode & 0x0FFF;
+			break;
 			case 0x2000: // 0x2NNN: Calls the subroutine at address NNN
 				stack[sp] = pc;
 				++sp;
@@ -178,6 +187,10 @@ public:
 			break;
 			case 0x6000: // 0x6XNN: Sets VX to NN.
 				V[(opcode & 0x0F00) >> 8] = (opcode & 0x00FF);
+				pc += 2;
+			break;
+			case 0x7000: // 0x7XNN: Adds NN to VX (Carry flag is not changed)
+				V[(opcode & 0x0F00) >> 8] += (opcode & 0x00FF);
 				pc += 2;
 			break;
 			case 0x8000:
@@ -222,7 +235,8 @@ public:
 							{
 								V[0xF] = 1;
 							}
-							gfx[(x + xline + ((y + yline) * 64))] ^= 1;
+							// gfx[(x + xline + ((y + yline) * 64))] ^= 1;
+							gfx[(x + xline + ((y + yline) * 64)) % (64 * 32)] ^= 1;
 						}
 					}
 				}
@@ -261,6 +275,10 @@ public:
 						{
 							V[i] = memory[I+i];
 						}
+						pc += 2;
+					break;
+					case 0x0029:
+						I = V[((opcode & 0x0F00) >> 8)];
 						pc += 2;
 					break;
 					default:
@@ -374,10 +392,10 @@ public:
 		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 	};
 
-	unsigned short x;
-	unsigned short y;
-	unsigned short height;
-	unsigned short pixel;
+	unsigned short x = 0;
+	unsigned short y = 0;
+	unsigned short height = 0;
+	unsigned short pixel = 0;
 };
 
 // using frames = duration<int64_t, ratio<1, 60>>;
@@ -416,16 +434,15 @@ int main(int argc, char const *argv[])
 		if (chip8.drawFlag)
 		{
 			// drawGraphics();
-			for (int i = 0; i < 64 ; ++i)
+			for (int i = 0; i < 64 * 32 ; ++i)
 			{
-				for (int j = 0; j < 32; ++j)
+				if (chip8.gfx[i] == 1)
 				{
-					if (chip8.gfx[i * (j+1)] == 1)
-					{
-						terminal_printf(i+1,j+1,"█");
-					} else {
-						terminal_printf(i+1,j+1," ");
-					}
+					terminal_printf(i%64+1,i/64+1,"█");
+				}
+				else
+				{
+					terminal_printf(i%64+1,i/64+1," ");
 				}
 			}
 		}
@@ -454,7 +471,7 @@ int main(int argc, char const *argv[])
 		terminal_printf(67, 31, "Sleep [color=gray]%f[/color] msc per frame", (sleep_time).count());
 		terminal_printf(67, 32, "Total [color=gray]%f[/color] msc per frame", (sleep_time + work_time).count());
 		
-		terminal.PrintDebugInfo(chip8.V, chip8.pc, chip8.I);
+		terminal.PrintDebugInfo(chip8.V, chip8.pc, chip8.I, chip8.memory);
 
 		terminal.Refresh();
 
