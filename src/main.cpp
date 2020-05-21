@@ -125,7 +125,7 @@ public:
 			delay_timer--;
 
 			if(delay_timer == 0) {
-				terminal_print(2,2,"delay fired!");
+				terminal_print(70,21,"delay fired!");
 			}
 		}
 
@@ -133,7 +133,7 @@ public:
 			sound_timer--;
 
 			if(sound_timer == 0) {
-				terminal_print(3,3,"sound fired!");
+				terminal_print(70,20,"sound fired!");
 			}
 		}
 	}
@@ -184,7 +184,7 @@ public:
 
 	// time registers that count at 60 Hz
 	// when set above zero they will count down to zero
-	unsigned char delay_timer = 10000;
+	unsigned char delay_timer = 100;
 	unsigned char sound_timer = 0;
 
 	// the system's buzzer
@@ -268,6 +268,7 @@ int main(int argc, char const *argv[])
 		// chip8.ClearArea(67, 31, 20, 1);
 		terminal_printf(67, 31, "Sleep  [color=gray]%f[/color] msc per frame", (sleep_time).count());
 		terminal_printf(67, 32, "Total [color=gray]%f[/color] msc per frame", (sleep_time + work_time).count());
+		terminal_printf(67,29, "Delay timer: %d", chip8.delay_timer);
 		terminal.Refresh();
 
 		if(terminal_has_input())
