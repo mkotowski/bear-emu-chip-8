@@ -396,10 +396,12 @@ public:
 		// Update timers
 		if(delay_timer > 0)
 		{
+			terminal_print(67,21,"↕ delay active!");
+
 			--delay_timer;
 
 			if(delay_timer == 0) {
-				terminal_print(67,21,"↕ delay fired!");
+				terminal_clear_area(67,21,15,1);
 			}
 		}
 
