@@ -5,6 +5,8 @@
 #include <vector>
 #include <time.h>
 
+#include <windows.h>
+
 #include "BearLibTerminal.h"
 
 std::chrono::system_clock::time_point a = std::chrono::system_clock::now();
@@ -405,6 +407,7 @@ public:
 		{
 			if(sound_timer == 1)
 			{
+				Beep(523,500); // 523 hertz (C5) for 500 milliseconds
 				terminal_print(67,22,"♪ sound fired!");
 			}
 
